@@ -18,7 +18,7 @@ from pyMCD.utils import process
 from pyMCD.utils import ic
 
 class MCD: # MultiCoordinate Driving method for finding MEP
-    
+
     def __init__(self,num_relaxation = 1,calculator=None):
         self.num_relaxation = num_relaxation
         self.direction = None
@@ -80,7 +80,32 @@ class MCD: # MultiCoordinate Driving method for finding MEP
                 data = calculated_molecule.get_minimal_data()
                 data['energy'] = calculated_molecule.energy
                 pickle.dump(data,f)
-                f.flush()                
+                f.flush()
+
+    def get_figure(self,data,unit):
+        import matplotlib.pyplot as plt
+
+        Label_fontsize = 12
+        Tick_fontsize = 10
+
+        ax = plt.subplot(111)
+
+        ax.spines.right.set_visible(False)
+        ax.spines.top.set_visible(False)
+
+        ax.yaxis.set_ticks_position('left')
+
+        X = list(range(len(data)))
+
+        plt.plot(X,np.array(data),'s-',markersize=4,color='black')
+
+        plt.xlabel('Step',fontsize=Label_fontsize)
+        plt.ylabel('Energy (kcal/mol)',fontsize=Label_fontsize)
+        plt.xticks(fontsize=Tick_fontsize)
+        plt.yticks(fontsize=Tick_fontsize)
+
+        plt.savefig(os.path.join(self.log_directory,'profile.png'))
+
 
     def write_profile(self,trajectory):
         # Save trajectory with log file and trajectory files (xyz, pkl)
@@ -92,12 +117,14 @@ class MCD: # MultiCoordinate Driving method for finding MEP
             energy_list.append(molecule.energy)
         n = len(energy_list)
         energy_log = open(os.path.join(save_directory,'profile.log'),'w')
-        energy_log.write(f'Original Energy ({self.energy_unit}) \t Relative Energy ({self.energy_unit})\n') 
+        energy_log.write(f'Original Energy ({self.energy_unit}) \t Relative Energy ({self.energy_unit})\n')
         reference_energy = energy_list[0]
         maximum_index = 0
         maximum_energy = -100000000
+        rel_energy_list = []
         for i in range(n):
             relative_energy = energy_list[i] - reference_energy
+            rel_energy_list.append(relative_energy)
             energy = energy_list[i]
             energy_log.write(f'{energy} \t {relative_energy}\n')
             if maximum_energy < energy_list[i]:
@@ -106,11 +133,13 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         # Write maxima point
         energy_log.write(f'Maxima point: {maximum_index}')
         energy_log.close()
+        # Make TS search trajectory
+        self.get_figure(rel_energy_list,self.energy_unit)
         # Save maximal point as ts.xyz
         trajectory[maximum_index].write_geometry(os.path.join(save_directory,'ts.xyz'))
         if maximum_index == 0 or maximum_index == n - 1:
             self.write_log('Caution: Reactant/Product are found to be the highest point!\n')
-         
+
     def get_delta_q(self,coordinate_list,constraints,num_steps):
         delta_q = dict()
         update_q = dict()
@@ -118,7 +147,7 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         # May consider better reaction coordinate representation later!
         for constraint in constraints:
             if num_steps[constraint] == 0: # Only consider scanning parts!
-                continue            
+                continue
             delta_q[constraint] = constraints[constraint] - ic.get_single_q_element(coordinate_list,constraint)
             update_q[constraint] = 0
         return delta_q,update_q
@@ -178,7 +207,7 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         process.locate_molecule(molecule,coordinate_list,False)
         self.direction = selected_coordinate
         return displacement,force
-        
+
     def get_corrected_indices(self,constraint): # In general, we use index = 1 as starting point!
         new_constraint = []
         for idx in constraint:
@@ -186,7 +215,7 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         new_constraint = tuple(new_constraint)
         return new_constraint
 
-        
+
     def print_status(self,molecule,constraints,unit = 'degree'):
         print ('########## Current geometry info ############')
         print ('\t Target \t Current')
@@ -243,7 +272,7 @@ class MCD: # MultiCoordinate Driving method for finding MEP
             delta = round(delta_q[coordinate]/num_steps[coordinate],4)
             self.write_log(f'{new_constraint}: {current_value} -> {target_value}, {delta} angstrom per step\n')
 
-        hostname = subprocess.check_output(['hostname'],universal_newlines=True) 
+        hostname = subprocess.check_output(['hostname'],universal_newlines=True)
         self.write_log(f'Computing node: {hostname}\n')
         st = datetime.datetime.now()
         self.write_log(f'Starting time: {st}\n')
@@ -310,8 +339,8 @@ class MCD: # MultiCoordinate Driving method for finding MEP
             exponent = int(np.log10(np.abs(delta_e)))
             x = delta_e * 10**(-exponent)
             if x < 0:
-                word = 'Decreased'           
-                x *= -1 
+                word = 'Decreased'
+                x *= -1
             x = format(x,'.4f')
             self.num_force_calls += num_force_calls
             endtime = str(endtime)[:-digit]

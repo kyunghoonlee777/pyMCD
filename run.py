@@ -40,7 +40,7 @@ def read_reactant(directory):
             if atom_info.strip() == '':
                 break
         except:
-            break 
+            break
     f.close()
     reactant = chem.Molecule()
     reactant.atom_list = atom_list
@@ -88,7 +88,7 @@ def get_calculator(args):
     calculator_name = args.calculator.lower()
     if calculator_name == 'gaussian':
         from pyMCD.Calculator import gaussian
-        calculator = gaussian.GaussianMCD('g09')
+        calculator = gaussian.GaussianMCD('g16')
     elif calculator_name == 'orca':
         from pyMCD.Calculator import orca
         calculator = orca.Orca()
@@ -117,7 +117,7 @@ def generate_path():
     if save_directory is None:
         save_directory = input_directory
     reactant, chg, multiplicity = read_reactant(input_directory) # Read geometry of reactant
-    constraints, num_steps = read_bond_info(input_directory) # bond info    
+    constraints, num_steps = read_bond_info(input_directory) # bond info
     change_option(args) # Read option file and change values in args
     calculator = get_calculator(args) # Make calculator, you can use your own calculator!
     scanner = mcd.MCD(num_relaxation = args.num_relaxation,calculator=calculator)
@@ -132,5 +132,5 @@ def generate_path():
     pathway = scanner.scan(reactant,constraints,num_steps,chg = chg, multiplicity = multiplicity)
 
 if __name__ == '__main__':
-    generate_path()     
+    generate_path()
     print ('hi')
