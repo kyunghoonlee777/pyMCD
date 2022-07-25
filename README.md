@@ -49,7 +49,7 @@ H -0.91872700 -0.04169400 -0.56646200
 H 0.88142600 0.07857400 -0.62177800
 ```
 #### 2. bond_info
-해줘요 ㅋㅋ
+
 ```
 1 6 1.54 6
 4 5 1.54 6
@@ -81,7 +81,7 @@ python run.py \
 - `save directory` : The path of directory that output files will be saved
 - `working directory` : The path of directory that quantum chemical calculation is conducted
 - `num_relaxation` : Number of optimization during relaxation
-- `scale` : **Help Me... lkh**
+- `scale` :
 - `calculator` : quantum chemical calculation program name (currently, `gaussian` and `orca` are available). If you want to use another quantum chemical calculation program, you can implement `new_qc_calculator.py` by referring to `./Calculator/template.py`.
 - `unit` : Energy unit (e.g. Hartree, kcal/mol, kJ/mol ...)
 
@@ -214,7 +214,7 @@ Maxima point: 6
 ### profile.png
 Relative energy plot
 
-![ex_screenshot](./img/screenshot.png)
+![profile](./figure/profile.png)
 ### ts.xyz
 Geometry of maximal point, `xyz format` with energy
 ```
