@@ -26,12 +26,13 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         self.log_directory = ''
         self.energy_unit = 'Hartree'
         self.num_force_calls = 0
-        self.scale = 1.0
+        self.step_size = 0.0
         self.consider_redundant = False
 
     def __str__(self):
         content = ''
         content = content + f'num relaxation: {self.num_relaxation}\n'
+        content = content + f'step size: {self.step_size}\n'
         #content = content + f'working_directory: {self.working_directory}\n'
         #content = content + f'qc inputs\n\n{self.content}\n'
         return content
@@ -61,12 +62,6 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         if save_directory == '':
             print ('No log directory!!! We do not save the pathway!!!')
         else:
-            # First, update energy log
-            with open(os.path.join(save_directory,'energy.log'),mode) as f:
-                if mode == 'w':
-                    f.write(f'Energy ({self.energy_unit})\n')
-                f.write(f'{index} {calculated_molecule.energy}\n')
-                f.flush()
             # Save xyz file
             with open(os.path.join(save_directory,'pathway.xyz'),mode) as f:
                 f.write(str(index)+'\n'+str(calculated_molecule.energy)+'\n')
@@ -75,12 +70,6 @@ class MCD: # MultiCoordinate Driving method for finding MEP
                     f.write(content)
                 f.write('\n')
                 f.flush()
-            # Save pickle file
-            with open(os.path.join(save_directory,'pathway.pkl'),mode+'b') as f:
-                data = calculated_molecule.get_minimal_data()
-                data['energy'] = calculated_molecule.energy
-                pickle.dump(data,f)
-                f.flush()                
 
     def write_profile(self,trajectory):
         # Save trajectory with log file and trajectory files (xyz, pkl)
@@ -92,24 +81,49 @@ class MCD: # MultiCoordinate Driving method for finding MEP
             energy_list.append(molecule.energy)
         n = len(energy_list)
         energy_log = open(os.path.join(save_directory,'profile.log'),'w')
-        energy_log.write(f'Original Energy ({self.energy_unit}) \t Relative Energy ({self.energy_unit})\n') 
+        # Always make it into kcal/mol
+        converter = 1
+        if self.energy_unit == 'Hartree':
+            converter = 627.5094740631 
+        elif self.energy_unit == 'eV':
+            converter = 23.0605506577
+        energy_log.write(f'Original Energy ({self.energy_unit}/mol) \t Relative Energy (kcal/mol)\n') 
         reference_energy = energy_list[0]
         maximum_index = 0
         maximum_energy = -100000000
+        relative_energy_list = []
         for i in range(n):
             relative_energy = energy_list[i] - reference_energy
+            relative_energy_list.append(relative_energy*converter)
             energy = energy_list[i]
-            energy_log.write(f'{energy} \t {relative_energy}\n')
+            energy_log.write(f'{energy} \t {relative_energy*converter}\n')
             if maximum_energy < energy_list[i]:
                 maximum_index = i
                 maximum_energy = energy_list[i]
         # Write maxima point
-        energy_log.write(f'Maxima point: {maximum_index}')
+        energy_log.write(f'Maxima point: {maximum_index}\n\n')
         energy_log.close()
+        self.save_figure(relative_energy_list,'kcal')
         # Save maximal point as ts.xyz
         trajectory[maximum_index].write_geometry(os.path.join(save_directory,'ts.xyz'))
         if maximum_index == 0 or maximum_index == n - 1:
             self.write_log('Caution: Reactant/Product are found to be the highest point!\n')
+
+    def save_figure(self,data,unit='kcal'):
+        import matplotlib.pyplot as plt
+        label_fontsize = 12
+        tick_fontsize = 10
+        ax = plt.subplot(111)
+        ax.spines['right'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.yaxis.set_ticks_position('left')
+        x = list(range(len(data)))
+        plt.plot(x,np.array(data),'s-',markersize=4,color='black')
+        plt.xlabel('Step',fontsize=label_fontsize)
+        plt.ylabel(f'Energy ({unit}/mol)',fontsize=label_fontsize)
+        plt.xticks(fontsize=tick_fontsize)
+        plt.yticks(fontsize=tick_fontsize)
+        plt.savefig(os.path.join(self.log_directory,'profile.png'))
          
     def get_delta_q(self,coordinate_list,constraints,num_steps):
         delta_q = dict()
@@ -217,13 +231,10 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         else:
             num_steps = num_steps.copy() # It should be dict
         constraints = constraints.copy()
-        ###### Write basic informations #####
-        self.write_log('##### Scanning information ######\n'+str(self.calculator),'w') # Calculator information
-        self.write_log(f'Num relaxation: {self.num_relaxation}\n\n')
         coordinate_list = molecule.get_coordinate_list()
         delta_q,update_q = self.get_delta_q(coordinate_list,constraints,num_steps)
         # Write reactant info
-        self.write_log(f'###### Reactant information ######\n')
+        self.write_log(f'###### Reactant information ######\n','w')
         if chg is not None and multiplicity is not None:
             self.write_log(f'charge: {chg}    multiplicity: {multiplicity}\n')
         else:
@@ -232,7 +243,8 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         for atom in molecule.atom_list:
             self.write_log(atom.get_content())
         self.write_log('\n')
-        self.write_log(f'########## Scanning coordinates ##########\n')
+        self.write_log(f'######### Scanning coordinates #########\n')
+        maximum_delta = -100
         for coordinate in delta_q:
             current_value = float(format(ic.get_single_q_element(coordinate_list,coordinate),'.4f'))
             target_value = constraints[coordinate]
@@ -241,10 +253,16 @@ class MCD: # MultiCoordinate Driving method for finding MEP
                 current_value *= 180/np.pi
                 target_value *= 180/np.pi
             delta = round(delta_q[coordinate]/num_steps[coordinate],4)
+            if abs(delta) > maximum_delta:
+                maximum_delta = abs(delta)
             self.write_log(f'{new_constraint}: {current_value} -> {target_value}, {delta} angstrom per step\n')
-
-        hostname = subprocess.check_output(['hostname'],universal_newlines=True) 
-        self.write_log(f'Computing node: {hostname}\n')
+        # Set default step size: (Maximum delta x/num_relaxation * 3)
+        if self.step_size == 0:
+            self.step_size = round(maximum_delta/self.num_relaxation * 3,4)
+            self.write_log(f'Step size is set to {self.step_size} as the default value!!!\n\n')
+        self.write_log(f'########## Scanning information ##########\n'+str(self)+'\n')
+        ###### Write basic informations #####
+        self.write_log('##### Calculator information ######\n'+str(self.calculator)) # Calculator information
         st = datetime.datetime.now()
         self.write_log(f'Starting time: {st}\n')
         print ('scanning ...')
@@ -282,17 +300,19 @@ class MCD: # MultiCoordinate Driving method for finding MEP
             num_force_calls = 1
             selected_coordinate = self.direction
             tmp_st = str(datetime.datetime.now())[:-digit]
-            content = f'[{tmp_st}] Progress: '
+            cnt = total_num_scans - sum(num_steps.values())
+            content = f'[{tmp_st}] Progress ({cnt}/{total_num_scans}): '
             for coordinate in original_num_steps:
                 total_num = original_num_steps[coordinate]
                 progress_num = total_num - num_steps[coordinate]
                 new_constraint = self.get_corrected_indices(coordinate)
                 content = content + f' {new_constraint}: {progress_num}/{total_num}'
+            #content = content + f' Total progress: {cnt}/{total_num_scans}'
             #content = content + f' Selected coordinate: {selected_coordinate}'
             self.write_log(content+'\n')
             #force_list.append(force)
             print ('status',displacement,num_steps)
-            calculated_data = self.calculator.relax_geometry(molecule,list_of_constraints,chg,multiplicity,'test',self.num_relaxation,displacement*self.scale,True)
+            calculated_data = self.calculator.relax_geometry(molecule,list_of_constraints,chg,multiplicity,'test',self.num_relaxation,self.step_size,True)
             scfenergies = calculated_data.scfenergies
             print ('relaxation energy: ',scfenergies[0] - molecule.energy)
             try:

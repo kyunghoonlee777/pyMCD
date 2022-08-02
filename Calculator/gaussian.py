@@ -27,7 +27,7 @@ class Gaussian:
         self.basis = ''
 
     def __str__(self):
-        content = ''
+        content = 'Calculator: Gaussian\n'
         content = content + f'working_directory: {self.working_directory}\n'
         content = content + f'command: {self.command}\n'
         content = content + f'Energy: {self.energy_unit}\n\n'
@@ -125,7 +125,7 @@ class Gaussian:
         converter = 1
         os.chdir(current_directory)
         if self.energy_unit == 'kcal':
-            converter = 23.06
+            converter = 23.0605506577
         if self.energy_unit == 'Hartree':
             converter = 0.036749326681
         #os.system('mv new.chk old.chk')
@@ -159,10 +159,9 @@ class Gaussian:
         coordinate_list = data.atomcoords[index] # Sometimes length is not matched, it performs extra scfenergy calculation
         converter = 1
         if self.energy_unit == 'kcal':
-            converter = 23.06
+            converter = 23.0605506577
         if self.energy_unit == 'Hartree':
             converter = 0.036749326681
-            #converter = 1/27.2114
         energy = data.scfenergies[index] * converter
         process.locate_molecule(molecule,coordinate_list,False)
         molecule.energy = energy

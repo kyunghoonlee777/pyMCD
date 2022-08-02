@@ -52,7 +52,7 @@ def read_bond_info(directory):
     num_steps = dict()
     formed_bonds = []
     broken_bonds = []
-    with open(os.path.join(directory,'bond_info')) as f:
+    with open(os.path.join(directory,'coordinates')) as f:
         for line in f:
             info = line.strip().split() #0: start, 1: end, 2: target length, 3: Num steps
             constraint = tuple([int(idx) - 1 for idx in info[:-2]])
@@ -77,8 +77,8 @@ def change_option(args):
                     args.working_directory = value
                 if attribute == 'num_relaxation':
                     args.num_relaxation = int(value)
-                if attribute == 'scale':
-                    args.scale = float(value)
+                if attribute == 'step_size':
+                    args.step_size = float(value)
                 if attribute == 'unit':
                     args.unit = value
     else:
@@ -103,30 +103,32 @@ def generate_path():
     import datetime
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_directory','-id',type=str,help='directory of inputs')
-    parser.add_argument('--save_directory','-sd',type=str,help='directory for saving outputs',default=None)
+    parser.add_argument('--output_directory','-od',type=str,help='directory for saving outputs',default=None)
     parser.add_argument('--working_directory','-wd',type=str,help='scratch directory of QC programs',default='')
-    parser.add_argument('-num_relaxation',type=int,help='Num relaxation for input',default=5)
-    parser.add_argument('-scale',type=float,help='Maxmial displacement',default=1.0)
+    parser.add_argument('--num_relaxation',type=int,help='Num relaxation for input',default=5)
+    parser.add_argument('--step_size',type=float,help='Maxmial displacement',default=0.0)
     parser.add_argument('--calculator','-c',type=str,help='Name of Quantum Calculation software',default='gaussian')
     parser.add_argument('--unit','-u',type=str,help='unit',default='Hartree')
 
     args = parser.parse_args()
 
     input_directory = args.input_directory
-    save_directory = args.save_directory
-    if save_directory is None:
-        save_directory = input_directory
+    output_directory = args.output_directory
+    if output_directory is None:
+        output_directory = input_directory
     reactant, chg, multiplicity = read_reactant(input_directory) # Read geometry of reactant
     constraints, num_steps = read_bond_info(input_directory) # bond info    
     change_option(args) # Read option file and change values in args
     calculator = get_calculator(args) # Make calculator, you can use your own calculator!
     scanner = mcd.MCD(num_relaxation = args.num_relaxation,calculator=calculator)
-    scanner.scale = args.scale
+    scanner.step_size = args.step_size
+    scanner.log_directory = output_directory
     if args.working_directory != '':
         scanner.change_working_directory(args.working_directory)
+    else:
+        scanner.change_working_directory(output_directory)
     scanner.change_energy_unit(args.unit)
     print (chg,multiplicity,len(reactant.atom_list))
-    scanner.log_directory = save_directory
     # Also, write constraints information (TODO)
     scanner.consider_redundant = False
     pathway = scanner.scan(reactant,constraints,num_steps,chg = chg, multiplicity = multiplicity)
