@@ -81,6 +81,11 @@ def change_option(args):
                     args.step_size = float(value)
                 if attribute == 'unit':
                     args.unit = value
+                if attribute == 'calculator':
+                    args.calculator = value
+                if attribute == 'command':
+                    args.command = value
+
     else:
         print ('option directory is not found! Default parameters are used!!!')
 
@@ -88,7 +93,7 @@ def get_calculator(args):
     calculator_name = args.calculator.lower()
     if calculator_name == 'gaussian':
         from pyMCD.Calculator import gaussian
-        calculator = gaussian.GaussianMCD('g09')
+        calculator = gaussian.GaussianMCD(args.command)
     elif calculator_name == 'orca':
         from pyMCD.Calculator import orca
         calculator = orca.Orca()
@@ -109,6 +114,7 @@ def generate_path():
     parser.add_argument('--step_size',type=float,help='Maxmial displacement',default=0.0)
     parser.add_argument('--calculator','-c',type=str,help='Name of Quantum Calculation software',default='gaussian')
     parser.add_argument('--unit','-u',type=str,help='unit',default='Hartree')
+    parser.add_argument('--command',type=str,help='command for running qc package',default='g09')
 
     args = parser.parse_args()
 
@@ -130,7 +136,6 @@ def generate_path():
     scanner.change_energy_unit(args.unit)
     print (chg,multiplicity,len(reactant.atom_list))
     # Also, write constraints information (TODO)
-    scanner.consider_redundant = False
     pathway = scanner.scan(reactant,constraints,num_steps,chg = chg, multiplicity = multiplicity)
 
 if __name__ == '__main__':

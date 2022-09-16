@@ -124,15 +124,14 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         plt.xticks(fontsize=tick_fontsize)
         plt.yticks(fontsize=tick_fontsize)
         plt.savefig(os.path.join(self.log_directory,'profile.png'))
+
          
-    def get_delta_q(self,coordinate_list,constraints,num_steps):
+    def get_delta_q(self,coordinate_list,constraints):
         delta_q = dict()
         update_q = dict()
         internal_coordinates = list(constraints.keys())
         # May consider better reaction coordinate representation later!
         for constraint in constraints:
-            if num_steps[constraint] == 0: # Only consider scanning parts!
-                continue            
             delta_q[constraint] = constraints[constraint] - ic.get_single_q_element(coordinate_list,constraint)
             update_q[constraint] = 0
         return delta_q,update_q
@@ -164,8 +163,8 @@ class MCD: # MultiCoordinate Driving method for finding MEP
     def update_geometry(self,molecule,constraints,num_steps,chg=None,multiplicity=None):
         num_relaxation = self.num_relaxation # N
         coordinate_list = molecule.get_coordinate_list()
-        delta_q,update_q = self.get_delta_q(coordinate_list,constraints,num_steps) # Only scanning coordinates are survived
-        scanning_coordinates = list(delta_q.keys())
+        delta_q,update_q = self.get_delta_q(coordinate_list,constraints) # Only scanning coordinates are survived
+        #scanning_coordinates = list(delta_q.keys())
         # If you want to put additional redundnat coordinate, activate consider_redundant, and implement your own redundant coordinate (Default: If activated, interatomic distance between bonded atoms are added)
         if self.consider_redundant:
             # Find distance that is close to each other
@@ -176,13 +175,23 @@ class MCD: # MultiCoordinate Driving method for finding MEP
                 if bond[0] < bond[1]:
                     if tuple_bond not in delta_q:
                         delta_q[tuple_bond] = 0.0
-                    update_q[tuple_bond] = 0.0
-        force = self.calculator.get_force(molecule,chg,multiplicity)
-        self.num_force_calls += 1
-        atom_list = molecule.atom_list
-        # Make update vector
-        n = len(atom_list)
-        selected_coordinate = self.select_coordinate(coordinate_list,force,delta_q,scanning_coordinates)
+                    update_q[tuple_bond] = 0.0 
+        scanning_coordinates = []
+        for constraint in num_steps:
+            if num_steps[constraint] > 0:
+                scanning_coordinates.append(constraint)
+        if len(scanning_coordinates) > 1:
+            force = self.calculator.get_force(molecule,chg,multiplicity)
+            self.num_force_calls += 1
+            atom_list = molecule.atom_list
+            # Make update vector
+            n = len(atom_list)
+            selected_coordinate = self.select_coordinate(coordinate_list,force,delta_q,scanning_coordinates) # Only single coordinate selected
+        elif len(scanning_coordinates) == 1:
+            selected_coordinate = scanning_coordinates[0]
+            force = None
+        else:
+            print ('Something wrong! Cannot select a coordinate!')
         # Update geometry using ic module
         update_q[selected_coordinate] = delta_q[selected_coordinate]/num_steps[selected_coordinate]
         displacement = abs(update_q[selected_coordinate])
@@ -232,7 +241,7 @@ class MCD: # MultiCoordinate Driving method for finding MEP
             num_steps = num_steps.copy() # It should be dict
         constraints = constraints.copy()
         coordinate_list = molecule.get_coordinate_list()
-        delta_q,update_q = self.get_delta_q(coordinate_list,constraints,num_steps)
+        delta_q,update_q = self.get_delta_q(coordinate_list,constraints)
         # Write reactant info
         self.write_log(f'###### Reactant information ######\n','w')
         if chg is not None and multiplicity is not None:
@@ -269,7 +278,7 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         list_of_constraints = list(constraints.keys())
         self.write_log('Set up done!!!\n')
         self.write_log('Initialization, Relaxing ....\n')
-        calculated_data = self.calculator.relax_geometry(molecule,list_of_constraints,chg,multiplicity,'test',None,1000,True)
+        calculated_data = self.calculator.relax_geometry(molecule,constraints,chg,multiplicity,'test',None,1000,True)
         try:
             self.num_force_calls += len(calculated_data.atomcoords)
         except:
@@ -280,7 +289,7 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         copied_molecule.energy = molecule.energy
         trajectory = [copied_molecule] # Trajectory is list of coordinates
         #self.print_status(molecule,constraints)
-        self.direction = list(constraints.keys())[0] # Just default direction, it's changed in update_geometry
+        self.direction = list_of_constraints[0] # Just default direction, it's changed in update_geometry
         energy_list = [molecule.energy]
         self.update_pathway(copied_molecule,0,'w')
         total_num_scans = sum(num_steps.values())
@@ -292,12 +301,7 @@ class MCD: # MultiCoordinate Driving method for finding MEP
             #self.write_log(f'[{starttime}] Performing one step search ... ({len(trajectory)-1}/{total_num_scans}) completed ... \n')
             # Update/Relax geometry
             self.print_status(molecule,constraints)
-            list_of_constraints = []
-            for constraint in num_steps:
-                if num_steps[constraint] > 0:
-                    list_of_constraints.append(constraint)
             displacement,force = self.update_geometry(molecule,constraints,num_steps,chg,multiplicity)
-            num_force_calls = 1
             selected_coordinate = self.direction
             tmp_st = str(datetime.datetime.now())[:-digit]
             cnt = total_num_scans - sum(num_steps.values())
@@ -313,10 +317,10 @@ class MCD: # MultiCoordinate Driving method for finding MEP
             #force_list.append(force)
             print ('status',displacement,num_steps)
             calculated_data = self.calculator.relax_geometry(molecule,list_of_constraints,chg,multiplicity,'test',self.num_relaxation,self.step_size,True)
-            scfenergies = calculated_data.scfenergies
-            print ('relaxation energy: ',scfenergies[0] - molecule.energy)
+            #scfenergies = calculated_data.scfenergies[]
+            #print ('relaxation energy: ',scfenergies[0] - molecule.energy)
             try:
-                num_force_calls += len(calculated_data.atomcoords)
+                self.num_force_calls += (len(calculated_data.atomcoords) - 1)
             except:
                 a = 1
             endtime = datetime.datetime.now()
@@ -333,10 +337,10 @@ class MCD: # MultiCoordinate Driving method for finding MEP
                 word = 'Decreased'           
                 x *= -1 
             x = format(x,'.4f')
-            self.num_force_calls += num_force_calls
+            #self.num_force_calls += num_force_calls
             endtime = str(endtime)[:-digit]
             delta_time = str(delta_time)[:-digit]
-            self.write_log(f'[{endtime}] {x}E{exponent} {self.energy_unit} has {word} after {num_force_calls} force calls! {delta_time} Taken ...\n')
+            self.write_log(f'[{endtime}] {x}E{exponent} {self.energy_unit} has {word} after {len(calculated_data.atomcoords)} force calls! {delta_time} Taken ...\n')
             energy_list.append(energy)
             # Save/Copy new molecule
             self.update_pathway(copied_molecule,len(trajectory),'a')
