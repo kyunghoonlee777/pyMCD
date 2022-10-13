@@ -45,7 +45,9 @@ def read_reactant(directory):
     reactant = chem.Molecule()
     reactant.atom_list = atom_list
     reactant.adj_matrix = process.get_adj_matrix_from_distance(reactant)
-    return reactant,chg,multiplicity
+    reactant.chg = chg
+    reactant.multiplicity = multiplicity
+    return reactant
 
 def read_bond_info(directory):
     constraints = dict()
@@ -93,7 +95,7 @@ def get_calculator(args):
     calculator_name = args.calculator.lower()
     if calculator_name == 'gaussian':
         from pyMCD.Calculator import gaussian
-        calculator = gaussian.GaussianMCD(args.command)
+        calculator = gaussian.Gaussian(args.command)
     elif calculator_name == 'orca':
         from pyMCD.Calculator import orca
         calculator = orca.Orca()
@@ -114,7 +116,7 @@ def generate_path():
     parser.add_argument('--step_size',type=float,help='Maxmial displacement',default=0.0)
     parser.add_argument('--calculator','-c',type=str,help='Name of Quantum Calculation software',default='gaussian')
     parser.add_argument('--unit','-u',type=str,help='unit',default='Hartree')
-    parser.add_argument('--command',type=str,help='command for running qc package',default='g09')
+    parser.add_argument('--command',type=str,help='command for running qc package',default='g16')
 
     args = parser.parse_args()
 
@@ -122,7 +124,7 @@ def generate_path():
     output_directory = args.output_directory
     if output_directory is None:
         output_directory = input_directory
-    reactant, chg, multiplicity = read_reactant(input_directory) # Read geometry of reactant
+    reactant = read_reactant(input_directory) # Read geometry of reactant
     constraints, num_steps = read_bond_info(input_directory) # bond info    
     change_option(args) # Read option file and change values in args
     calculator = get_calculator(args) # Make calculator, you can use your own calculator!
@@ -130,13 +132,16 @@ def generate_path():
     scanner.step_size = args.step_size
     scanner.log_directory = output_directory
     if args.working_directory != '':
-        scanner.change_working_directory(args.working_directory)
+        if os.path.exists(args.working_directory):
+            scanner.change_working_directory(args.working_directory)
+        else:
+            print ('working directory does not exist!!! Using output directory as default ...')
+            scanner.change_working_directory(output_directory)
     else:
         scanner.change_working_directory(output_directory)
     scanner.change_energy_unit(args.unit)
-    print (chg,multiplicity,len(reactant.atom_list))
     # Also, write constraints information (TODO)
-    pathway = scanner.scan(reactant,constraints,num_steps,chg = chg, multiplicity = multiplicity)
+    pathway = scanner.scan(reactant,constraints,num_steps,chg = reactant.chg, multiplicity = reactant.multiplicity)
 
 if __name__ == '__main__':
     generate_path()     

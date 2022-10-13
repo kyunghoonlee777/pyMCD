@@ -355,6 +355,5 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         et = datetime.datetime.now()
         self.write_log(f'End time: {et}\n')
         self.write_log(f'Taken time: {et-st}\n')
-        self.calculator.clean_scratch()
         return trajectory
 

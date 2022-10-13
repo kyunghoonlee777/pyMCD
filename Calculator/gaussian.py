@@ -19,7 +19,7 @@ from pyMCD.utils import process
 
 class Gaussian:
 
-    def __init__(self,command='g09'):
+    def __init__(self,command='g16'):
         self.working_directory = os.getcwd()
         self.command = command
         self.content='#N pm6 scf(xqc) '
@@ -36,32 +36,35 @@ class Gaussian:
 
     def load_content(self,template_directory):
         content = ''
-        with open(template_directory) as f:        
+        with open(template_directory) as f:
             for line in f:
                 content = content + line
         self.content = content
 
     def load_basis(self,basis_directory):
         basis = ''
-        with open(basis_directory) as f:        
+        with open(basis_directory) as f:
             for line in f:
                 basis = basis + line
         self.basis = basis
 
     def change_working_directory(self,working_directory):
-        # Get current reaction coordinate
         if not os.path.exists(working_directory):
             print ('Working directory does not exist! Creating new directory ...')
-            try:
-                os.system(f'mkdir {self.working_directory}')
-            except:
+            os.system(f'mkdir -p {self.working_directory}')
+            if not os.path.exists(working_directory):
                 print ('Cannot create working directory!!!\n Recheck your working directory ...')
-                working_directory = self.working_directory
-        self.working_directory = working_directory
+                print (f'We will use the current directory {self.working_directory} as working directory ...')
+            else:
+                print ('scratch directory well created !!!')
+                self.working_directory = working_directory
+        else:
+            self.working_directory = working_directory
+        working_directory = self.working_directory
         os.environ['GAUSS_SCRDIR'] = working_directory
 
     def get_content(self):
-        return self.content 
+        return self.content
 
     def get_default_mol_params(self,molecule):
         try:
@@ -70,7 +73,7 @@ class Gaussian:
             chg = 0
         try:
             e_list = molecule.get_num_of_lone_pair_list()
-            num_of_unpaired_e = len(np.where((2*e_list) % 2 == 1)[0])    
+            num_of_unpaired_e = len(np.where((2*e_list) % 2 == 1)[0])
             multiplicity = num_of_unpaired_e + 1
         except:
             z_sum = np.sum(molecule.get_z_list())
@@ -82,7 +85,7 @@ class Gaussian:
         for atom in molecule.atom_list:
             f.write(atom.get_content())
         f.write('\n')
-    
+
     def write_basis(self,f):
         if self.basis != '':
             f.write(f'{self.basis}\n')
@@ -97,13 +100,13 @@ class Gaussian:
         self.write_molecule_info(f,molecule,chg,multiplicity)
         ### Write constraints
         for constraint in constraints:
-            constraint_info = [] 
+            constraint_info = []
             if len(constraint) == 2:
                 constraint_info.append('B')
             elif len(constraint) == 3:
                 constraint_info.append('A')
             else:
-                constraint_info.append('D') 
+                constraint_info.append('D')
             for index in constraint:
                 constraint_info.append(str(index+1))
             constraint_info.append('F')
@@ -169,16 +172,7 @@ class Gaussian:
         os.chdir(current_directory)
         if return_data:
             return data
-                
 
-class GaussianMCD(Gaussian):
-    
-    def __init__(self,command='g09'):
-        super().__init__(command)
-        self.old_chk_name = 'old'
-        self.new_chk_name = 'new'
-
-    
     def relax_geometry(self,molecule,constraints,chg=None,multiplicity=None,file_name='test',num_relaxation=5,maximal_displacement=1000,return_data=False):
         if maximal_displacement < 100:
             max_step = int(maximal_displacement*100) + 1
@@ -188,45 +182,3 @@ class GaussianMCD(Gaussian):
         data = self.optimize_geometry(molecule,constraints,chg,multiplicity,file_name,extra,return_data)
         if return_data:
             return data
-
-    def get_content(self):
-        # Check whether old one exists
-        content = self.content 
-        if os.path.exists(f'{self.old_chk_name}.chk'):
-            print ('check point exists!!!')
-            content = f'%oldchk={self.old_chk_name}.chk\n' + content
-            content = content + ' guess=read '
-        content = f'%chk={self.new_chk_name}.chk\n' + content        
-        return content      
-
-    def change_chk_file(self):
-        old_chk_directory = os.path.join(self.working_directory,self.old_chk_name+'.chk')
-        new_chk_directory = os.path.join(self.working_directory,self.new_chk_name+'.chk')
-        os.system(f'mv {new_chk_directory} {old_chk_directory}')
-
-    def get_energy(self,molecule,chg=None,multiplicity=None,file_name='test',extra=''):
-        energy = super().get_energy(molecule,chg,multiplicity,file_name,extra)
-        self.change_chk_file()
-        return energy
-
-    def get_force(self,molecule,chg=None,multiplicity=None,file_name='test',extra=' Symmetry = None'):
-        force = super().get_force(molecule,chg,multiplicity,file_name,extra)
-        self.change_chk_file()
-        return force
-
-    def optimize_geometry(self,molecule,constraints = {},chg=None,multiplicity=None,file_name='test',extra='',return_data = False):
-        data = super().optimize_geometry(molecule,constraints,chg,multiplicity,file_name,extra,return_data)
-        self.change_chk_file()
-        if return_data:
-            return data
-
-    def clean_scratch(self,file_name='test.com'):
-        working_directory = self.working_directory
-        chk_directory = os.path.join(working_directory,'old.chk')
-        os.system(f'rm {chk_directory}')
-        chk_directory = os.path.join(working_directory,'new.chk')
-        os.system(f'rm {chk_directory}')
-        file_directory = os.path.join(working_directory,'test.com')
-        os.system(f'rm {file_directory}')
-        file_directory = os.path.join(working_directory,'test.log')
-        os.system(f'rm {file_directory}')

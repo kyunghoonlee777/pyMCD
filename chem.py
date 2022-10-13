@@ -373,6 +373,7 @@ class Molecule:
         self.chg = None
         self.energy = None        
         self.smiles = None
+        self.multiplicity = None
 
         if data == None:
             pass
@@ -458,6 +459,15 @@ class Molecule:
                 return np.sum(chg_list)
         else:
             return self.chg
+
+    def get_multiplicity(self):
+        try:
+            e_list = molecule.get_num_of_lone_pair_list()
+            num_of_unpaired_e = len(np.where((2*e_list) % 2 == 1)[0])    
+            multiplicity = num_of_unpaired_e + 1
+            return multiplicity
+        except:
+            return None
 
     def get_adj_matrix(self):
         if self.adj_matrix is not None:
