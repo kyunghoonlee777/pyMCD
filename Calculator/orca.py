@@ -7,6 +7,8 @@ import subprocess
 import pickle
 import datetime
 import argparse
+import distutils.spawn
+
 import numpy as np
 
 ### ace-reaction libraries ###
@@ -22,9 +24,14 @@ class Calculator:
 
     def __init__(self,command='orca'):
         self.working_directory = os.getcwd()
+        check = distutils.spawn.find_executable(command)
+        if check is None:
+            print ('orca not found!')
+            exit()
         self.command = command
         self.energy_unit = 'Hartree'
         self.nproc=1
+        self.content = '! b3lyp 6-31g(d)'
 
     def change_working_directory(self,working_directory):
         # Get current reaction coordinate

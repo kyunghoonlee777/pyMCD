@@ -7,8 +7,9 @@ import subprocess
 import pickle
 import datetime
 import argparse
-import numpy as np
+import distutils.spawn
 
+import numpy as np
 
 ### Module for reading gaussian files ###
 import cclib
@@ -20,10 +21,27 @@ class Gaussian:
 
     def __init__(self,command='g16'):
         self.working_directory = os.getcwd()
-        self.command = command
+        # Check command
+        check = distutils.spawn.find_executable(command)
+        if check is not None:
+            self.command = command
+        else:
+            # Check default command
+            commands = ['g09','g16']
+            found = False
+            for old_command in commands:
+                check = distutils.spawn.find_executable(old_command)
+                if check is not None:
+                    self.command = old_command
+                    print (f'command {self.command} is used for running Gaussian, instead of {command}!')
+                    found = True
+                    break
+            if not found:
+                print ('Gaussian not found!')
+                exit()
         self.content='#N pm6 scf(xqc) '
         self.energy_unit = 'Hartree'
-        self.basis = ''
+        self.basis = '' # Used for for input for Effective Core Potential! 
 
     def __str__(self):
         content = 'Calculator: Gaussian\n'

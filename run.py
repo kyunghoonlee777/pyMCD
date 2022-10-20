@@ -115,7 +115,7 @@ def generate_path():
     parser.add_argument('--step_size',type=float,help='Maxmial displacement',default=0.0)
     parser.add_argument('--calculator','-c',type=str,help='Name of Quantum Calculation software',default='gaussian')
     parser.add_argument('--unit','-u',type=str,help='unit',default='Hartree')
-    parser.add_argument('--command',type=str,help='command for running qc package',default='g16')
+    parser.add_argument('--command',type=str,help='command for running qc package',default='g09')
 
     args = parser.parse_args()
 

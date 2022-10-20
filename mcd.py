@@ -281,7 +281,8 @@ class MCD: # MultiCoordinate Driving method for finding MEP
         list_of_constraints = list(constraints.keys())
         self.write_log('Set up done!!!\n')
         self.write_log('Initialization, Relaxing ....\n')
-        calculated_data = self.calculator.relax_geometry(molecule,constraints,chg,multiplicity,'test',None,1000,True)
+        # To start with the geometries of reactants that are near local minima ... 
+        calculated_data = self.calculator.relax_geometry(molecule,constraints,chg,multiplicity,'test',None,1000,True) 
         try:
             self.num_force_calls += len(calculated_data.atomcoords)
         except:
