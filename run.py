@@ -44,7 +44,6 @@ def read_reactant(directory):
     f.close()
     reactant = chem.Molecule()
     reactant.atom_list = atom_list
-    reactant.adj_matrix = process.get_adj_matrix_from_distance(reactant)
     reactant.chg = chg
     reactant.multiplicity = multiplicity
     return reactant
@@ -145,4 +144,4 @@ def generate_path():
 
 if __name__ == '__main__':
     generate_path()     
-    print ('hi')
+    print ('finished ...')

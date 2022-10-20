@@ -377,21 +377,6 @@ class Molecule:
 
         if data == None:
             pass
-
-        elif (type(data) == str) and (data[-4:] != '.xyz'):
-            # Generate data with rdkit
-            from rdkit import Chem            
-            try:
-                rd_mol = Chem.MolFromSmiles(data)
-                ace_mol = process.get_ace_mol_from_rd_mol(rd_mol)
-            except:
-                print ('Molecule is not valid!!!')
-            self.atom_list = ace_mol.atom_list
-            self.atom_feature = ace_mol.atom_feature
-            self.adj_matrix = ace_mol.adj_matrix
-            self.bo_matrix = ace_mol.bo_matrix
-            self.chg = np.sum(self.atom_feature['chg'])
-            self.smiles = data
           
         elif (type(data) == str) and (data[-4:] == '.xyz'):
             # data is already opened file
@@ -426,30 +411,7 @@ class Molecule:
             self.atom_list = atom_list
             # At least make adjacency
             self.adj_matrix = process.get_adj_matrix_from_distance(self)
-             
-        else:
-            try:
-                len(data[0]) # Then, it's some kind of list,tuple,numpy
-                make = True
-            except:
-                make = False
-                print ('Wrong input type!!!')
-            if make:
-                # Data: (z_list,adj_matrix,bo_matrix,chg_list)
-                atom_list = []
-                atom_info_list = data[0]
-                for atom_info in atom_info_list:
-                    atom = Atom(atom_info)
-                    atom_list.append(atom)
-                self.atom_list = atom_list
-                self.adj_matrix = data[1]
-                self.bo_matrix = data[2]
-                self.atom_feature['chg'] = data[3]
-                if self.adj_matrix is None and self.bo_matrix is not None:
-                    self.adj_matrix = np.where(self.bo_matrix>0,1,0)
-            else:
-                print ('Something wrong with the input data!!! Check your data again!')
-    
+              
     def get_chg(self):
         if self.chg is None:
             chg_list = self.get_chg_list()

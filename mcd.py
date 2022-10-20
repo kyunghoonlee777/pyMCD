@@ -110,7 +110,10 @@ class MCD: # MultiCoordinate Driving method for finding MEP
             self.write_log('Caution: Reactant/Product are found to be the highest point!\n')
 
     def save_figure(self,data,unit='kcal'):
-        import matplotlib.pyplot as plt
+        try:
+            import matplotlib.pyplot as plt
+        except:
+            return None
         label_fontsize = 12
         tick_fontsize = 10
         ax = plt.subplot(111)

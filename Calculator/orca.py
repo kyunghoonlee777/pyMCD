@@ -9,10 +9,6 @@ import datetime
 import argparse
 import numpy as np
 
-
-### Module for reading gaussian files ###
-import cclib
-
 ### ace-reaction libraries ###
 from pyMCD.utils import process
 

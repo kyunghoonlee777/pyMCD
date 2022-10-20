@@ -16,7 +16,6 @@ import cclib
 ### ace-reaction libraries ###
 from pyMCD.utils import process
 
-
 class Gaussian:
 
     def __init__(self,command='g16'):
