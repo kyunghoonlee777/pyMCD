@@ -10,10 +10,9 @@ python code for Multi-Coordinate Driving (MCD) method
 ## Environmental
 
 - python>=3.7
-- [cclib](https://github.com/cclib/cclib)=1.7.1
-- [numpy](https://github.com/numpy/numpy)
-- [RDKit](https://www.rdkit.org/docs/Install.html)>=2020.09.3
-- [scipy](https://github.com/scipy/scipy)
+- [numpy](https://github.com/numpy/numpy) 
+- [cclib](https://github.com/cclib/cclib)=1.7.1 (If Gaussian should be used for running QC package)
+- [matplotlib](https://github.com/matplotlib/matplotlib) (If users want to plot a profile)
 
 ## Input
 
@@ -69,29 +68,29 @@ Information containing calculation theory/level, basis set, solvation and other 
 ### Execute pyMCD
 ```
 python run.py \
-    -id <input directory> \
-        -sd <save directory> \
-            -wd <working directory> \
-                -num_relaxation <num_relaxation> \
-                    -scale <scale> \
-                        -c <calculator> \
-                            -u <unit>
-                            ```
-                            - `input directory` : The path of directory that input files(e.g. R.com, bond_info, and qc_input) is stored
-                            - `save directory` : The path of directory that output files will be saved
-                            - `working directory` : The path of directory that quantum chemical calculation is conducted
-                            - `num_relaxation` : Number of optimization during relaxation
-                            - `scale` :
-                            - `calculator` : quantum chemical calculation program name (currently, `gaussian` and `orca` are available). If you want to use another quantum chemical calculation program, you can implement `new_qc_calculator.py` by referring to `./Calculator/template.py`.
-                            - `unit` : Energy unit (e.g. Hartree, kcal/mol, kJ/mol ...)
+	-id <input directory> \
+	-sd <save directory> \
+	-wd <working directory> \
+	-num_relaxation <num_relaxation> \
+	-scale <scale> \
+	-c <calculator> \
+	-u <unit>
+```
+- `input directory` : The path of directory that input files(e.g. R.com, bond_info, and qc_input) is stored
+- `save directory` : The path of directory that output files will be saved
+- `working directory` : The path of directory that quantum chemical calculation is conducted
+- `num_relaxation` : Number of optimization during relaxation
+- `scale` :
+- `calculator` : quantum chemical calculation program name (currently, `gaussian` and `orca` are available). If you want to use another quantum chemical calculation program, you can implement `new_qc_calculator.py` by referring to `./Calculator/template.py`.
+- `unit` : Energy unit (e.g. Hartree, kcal/mol, kJ/mol ...)
 
-                            **Example Code for diels-alder reaction TS search**
-                            ```
-                            export PYTHONPATH=<git clone path>
-                            python run.py \
-                                -id example/diels \
-                                    -sd example/diels
-                                    ```
+**Example Code for diels-alder reaction TS search**
+```
+export PYTHONPATH=<git clone path>
+python run.py \
+	-id example/diels \
+	-sd example/diels
+```
 
 ## Output
 Output files will be saved in `save directory`. Default option is same with `input directory`
