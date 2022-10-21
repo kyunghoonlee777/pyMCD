@@ -22,7 +22,7 @@ example/diels
 │
 ├── R.com       # Geometry of interested molecule
 │
-├── bond_info   # target bond information
+├── coordinates   # Input for active coordinates
 │
 └── qc_input    # Input file for Quantum Chemistry package
 ```
@@ -98,15 +98,6 @@ Output files will be saved in `save directory`. Default option is same with `inp
 ### output.log
 Brief description and output logs of `pyMCD`
 ```
-##### Scanning information ######
-working_directory: /home/junhkim/ts/pyMCD/examples/diels
-command: g16
-Energy: Hartree
-
-###### qc_input ######
-#N pm6 scf(xqc)
-
-Num relaxation: 5
 
 ###### Reactant information ######
 charge: 0    multiplicity: 1
@@ -128,24 +119,40 @@ H -0.895194 -0.034719 1.916646
 H -0.918727 -0.041694 -0.566462
 H 0.881426 0.078574 -0.621778
 
-########## Scanning coordinates ##########
+######### Scanning coordinates #########
 (1, 6): 2.7 -> 1.54, -0.1933 angstrom per step
 (4, 5): 2.7056 -> 1.54, -0.1943 angstrom per step
-Computing node: master
+Step size is set to 0.1166 as the default value!!!
 
-Starting time: 2022-07-25 14:02:04.747527
+########## Scanning information ##########
+num relaxation: 5
+step size: 0.1166
+
+##### Calculator information ######
+Calculator: Gaussian
+working_directory: /scratch/udg/
+command: g16
+Energy: Hartree
+
+###### qc_input ######
+#N pm6 scf(xqc)
+
+Starting time: 2022-10-21 11:45:45.372045
 Set up done!!!
 Initialization, Relaxing ....
 Relaxation finished! Start scanning ....
-[2022-07-25 14:02:08.065] Progress:  (1, 6): 0/6 (4, 5): 1/6
-[2022-07-25 14:02:18.950] 0.3920E-2 Hartree has Increased after 6 force calls! 0:00:12.557 Taken ...
+[2022-10-21 11:45:48.417] Progress (1/12):  (1, 6): 0/6 (4, 5): 1/6
+[2022-10-21 11:46:02.254] 0.3921E-2 Hartree has Increased after 5 force calls! 0:00:15.312 Taken ...
+[2022-10-21 11:46:03.746] Progress (2/12):  (1, 6): 1/6 (4, 5): 1/6
+[2022-10-21 11:46:14.718] 0.4016E-2 Hartree has Increased after 5 force calls! 0:00:12.460 Taken ...
+[2022-10-21 11:46:16.204] Progress (3/12):  (1, 6): 2/6 (4, 5): 1/6
 ...
-[2022-07-25 14:04:06.041] Progress:  (1, 6): 6/6 (4, 5): 6/6
-[2022-07-25 14:04:11.715] 0.1396E-1 Hartree has Decreased after 6 force calls! 0:00:07.276 Taken ...
-[2022-07-25 14:04:11.717077] Scan completed ...
-Total 85 force calls performed ...
-End time: 2022-07-25 14:04:12.941507
-Taken time: 0:02:08.193980
+[2022-10-21 11:48:10.626] Progress (12/12):  (1, 6): 6/6 (4, 5): 6/6
+[2022-10-21 11:48:16.122] 0.1393E-1 Hartree has Decreased after 5 force calls! 0:00:05.497 Taken ...
+[2022-10-21 11:48:16.126018] Scan completed ...
+Total 60 force calls performed ...
+End time: 2022-10-21 11:48:17.883163
+Taken time: 0:02:32.511118
 
 ```
 ### pathway.xyz
