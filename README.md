@@ -2,8 +2,6 @@
 
 # pyMCD
 
-A python code for searching transition states with the Multi-Coordinate Driving (MCD) method
-
 ## Requirements
 
 - python>=3.7
@@ -304,7 +302,7 @@ H 0.952301 0.147552 -0.636911
 
 ## Implementation of Calculator
 
-Follow the following page: [Implementation instruction](subpage/details.md)
+View the following page: [Implementation instruction](subpage/details.md)
 
 ## Citation
 
