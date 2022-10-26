@@ -1,36 +1,56 @@
+# readme
+
 # pyMCD
-python code for Multi-Coordinate Driving (MCD) method
 
-## Table of Contents
+A python code for searching transition states with the Multi-Coordinate Driving (MCD) method
 
-- [Environmental](#environmental)
-- [Input](#input)
-- [Output](#output)
-
-## Environmental
+## Requirements
 
 - python>=3.7
-- [numpy](https://github.com/numpy/numpy) 
-- [cclib](https://github.com/cclib/cclib)=1.7.1 (If Gaussian should be used for running QC package)
-- [matplotlib](https://github.com/matplotlib/matplotlib) (If users want to plot a profile)
+- [numpy](https://github.com/numpy/numpy)
+- [cclib](https://github.com/cclib/cclib)>=1.7.1 (If users want to use Gaussian …)
+- [matplotlib](https://github.com/matplotlib/matplotlib) (If users want to obtain the figure of a profile)
 
-## Input
+## Settings
 
-### Experimental directory Structure
+Before running pyMCD, you should well configure the `PYTHONPATH` and the QC software to run pyMCD. For the latter one, you should configure the path as:
+
+```python
+>> export PYTHONPATH=<git clone path>
 ```
-example/diels
-│
-├── R.com       # Geometry of interested molecule
-│
-├── coordinates   # Input for active coordinates
-│
-└── qc_input    # Input file for Quantum Chemistry package
+
+Also, QC software should be directly executable with a specific command. For example, in the case of Gaussian 16, when you command ‘which g16', the path for g16 should be found as the following:
+
+```python
+>> which g16
+>> /appl/Gaussian16/AVX_revB01/g16/g16
 ```
-#### 1. R.com
-Geometry of target molecule with `charge` and `spin multiplicity`
+
+If the path is not found, you will see the following result:
+
+```python
+>> which g16
+>> **no g16 in** (directories) # (No g16 is the key point)
 ```
-0 1
-C 0.00000000 0.00000000 0.00000000
+
+## Input files
+
+Users have to prepare three input files:
+
+- R.com: Input for the geometry of reactants
+- coordinates: Input for setting active coordinates
+- qc_input: Input for Quantum Chemistry (QC) package
+- options: Additional hyperparameters for pyMCD
+
+Here, we show the example of input files in example/diels
+
+### 1. R.com
+
+The geometry of target molecule with `charge` and `spin multiplicity` is written:
+
+```
+0 1 # charge multiplicity
+C 0.00000000 0.00000000 0.00000000 # 3D geometry of reactants of Diels alder reaction
 C 0.03101500 0.00321900 1.33695700
 C 1.25868100 0.00290300 2.13867800
 C 2.49534700 -0.00205700 1.62972600
@@ -47,56 +67,83 @@ H -0.89519400 -0.03471900 1.91664600
 H -0.91872700 -0.04169400 -0.56646200
 H 0.88142600 0.07857400 -0.62177800
 ```
-#### 2. bond_info
+
+### 2. coordinates
+
+Active coordinates in terms of internal coordinates are specified
 
 ```
 1 6 1.54 6
 4 5 1.54 6
 ```
-#### 3. qc_input
-Information containing calculation theory/level, basis set, solvation and other detail options.
+
+Here, it scans the distance between C1 and C6 and the distance between C4 and C5. They are shrunk to 1.54 angstrom with 6 steps.
+
+### 3. qc_input
+
+Information containing theory level of calculations, basis set, solvation, and other detail options.
 
 **For gaussian,**
+
 ```
 #N pm6 scf(xqc)
 ```
+
 **For Orca,**
+
 ```
 ! b3lyp 6-31g(d)
 ```
 
-### Execute pyMCD
+### 4. option
+
+We feed hyperparameters of pyMCD as the following format:
+
+```python
+max_step=7 # The maximum number of optimization steps, default=5
+step_size=0.05 # The maximal displacement within an optimization step, default is set with optimized value
+unit=Hartree # The energy unit for printing a log file. Available units are kcal, eV, Hartree. Default is Hartree
+working_directory=<scratch directory> # A scratch directory for running QC package, default is the input directory
+calculator: Gaussian # The name of QC package. Currently, Gaussian and Orac are available
+command: g09 # The command for running QC package. (Same command you configured in 2. Settings)
 ```
-python run.py \
-	-id <input directory> \
-	-sd <save directory> \
-	-wd <working directory> \
-	-num_relaxation <num_relaxation> \
-	-scale <scale> \
-	-c <calculator> \
-	-u <unit>
+
+This file is not necessary. If this file is not found, the code will automatically run with setting variables as default values.
+
+## Executing pyMCD
+
+You can run pyMCD with the following command:
+
+```python
+python run.py -id <input directory> -od <output directory>
 ```
-- `input directory` : The path of directory that input files(e.g. R.com, bond_info, and qc_input) is stored
-- `save directory` : The path of directory that output files will be saved
-- `working directory` : The path of directory that quantum chemical calculation is conducted
-- `num_relaxation` : Number of optimization during relaxation
-- `scale` :
-- `calculator` : quantum chemical calculation program name (currently, `gaussian` and `orca` are available). If you want to use another quantum chemical calculation program, you can implement `new_qc_calculator.py` by referring to `./Calculator/template.py`.
-- `unit` : Energy unit (e.g. Hartree, kcal/mol, kJ/mol ...)
+
+Output files will be saved in the `output directory`. Default option is same with the `input directory`
 
 **Example Code for diels-alder reaction TS search**
+
 ```
-export PYTHONPATH=<git clone path>
 python run.py \
-	-id example/diels \
-	-sd example/diels
+    -id example/diels \
+    -sd example/diels
 ```
 
 ## Output
-Output files will be saved in `save directory`. Default option is same with `input directory`
 
-### output.log
-Brief description and output logs of `pyMCD`
+Basically, five output files are created:
+
+- output.log
+- pathway.xyz
+- ts.xyz
+- profile.log
+- profile.png (This is well created only when the matplotlib library is well installed)
+
+Example output files after running pyMCD with the previous input are shown below:
+
+### 1. output.log
+
+A brief description and output logs of `pyMCD` are written.
+
 ```
 
 ###### Reactant information ######
@@ -155,8 +202,11 @@ End time: 2022-10-21 11:48:17.883163
 Taken time: 0:02:32.511118
 
 ```
-### pathway.xyz
-Pathway searched by `pyMCD`
+
+### 2. pathway.xyz
+
+The geometries of the points along the pathway generated by `pyMCD` ant their electronic energies are written.
+
 ```
 0
 0.0776422942853723
@@ -198,8 +248,11 @@ H -0.839231 0.316348 1.763824
 H -0.934544 -0.820205 -0.34714
 H 0.43206 0.245347 -0.707103
 ```
-### profile.log
-Energy for each step in `pyMCD` pathway
+
+### 3. profile.log
+
+The electronic energies of the points along the pathway are written. The first column shows the original energy with the energy unit specified in the ‘option’ file. The second column shows the relative energy with respect to reactants with kcal/mol.
+
 ```
 Original Energy (Hartree/mol)    Relative Energy (kcal/mol)
 0.0776422942853723   0.0
@@ -217,12 +270,17 @@ Original Energy (Hartree/mol)    Relative Energy (kcal/mol)
 -0.0018241595178008856   -49.86595263168884
 Maxima point: 6
 ```
-### profile.png
-Relative energy plot
 
-![profile](./figure/profile.png)
-### ts.xyz
-Geometry of maximal point, `xyz format` with energy
+### 4. profile.png
+
+Figure of profile using relative energy as y-axis.
+
+![https://www.notion.so./figure/profile.png](https://www.notion.so./figure/profile.png)
+
+### 5. ts.xyz
+
+The geometry of the maximum point of the pathway and its electronic energy.
+
 ```
 16
 0.11283916423722741
@@ -243,12 +301,17 @@ H -0.887984 -0.089442 1.843352
 H -0.783879 -0.365275 -0.622262
 H 0.952301 0.147552 -0.636911
 ```
-## Citation
-If this code was helpful to you, please cite as below
-```
-Thank you !
-```
 
-## References?
+## Implementation of Calculator
+
+Follow the following page:
+
+[Implementation instruction](subpage/details.md)
+
+## Citation
+
+Please cite as below:
 
 ## License
+
+The code is under BSD-3-license
