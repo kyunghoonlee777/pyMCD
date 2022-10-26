@@ -275,7 +275,7 @@ Maxima point: 6
 
 Figure of profile using relative energy as y-axis.
 
-![https://www.notion.so./figure/profile.png](https://www.notion.so./figure/profile.png)
+![profile](./figure/profile.png)
 
 ### 5. ts.xyz
 
@@ -304,9 +304,7 @@ H 0.952301 0.147552 -0.636911
 
 ## Implementation of Calculator
 
-Follow the following page:
-
-[Implementation instruction](subpage/details.md)
+Follow the following page: [Implementation instruction](subpage/details.md)
 
 ## Citation
 
