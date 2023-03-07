@@ -1,0 +1,5 @@
+max_step=3
+step_size=0.1 
+unit=Hartree
+calculator=Gaussian
+command=g09
