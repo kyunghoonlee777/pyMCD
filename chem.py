@@ -410,7 +410,7 @@ class Molecule:
                     print ('Check the file again:',data)
             self.atom_list = atom_list
             # At least make adjacency
-            self.adj_matrix = process.get_adj_matrix_from_distance(self)
+            #self.adj_matrix = process.get_adj_matrix_from_distance(self)
               
     def get_chg(self):
         if self.chg is None:
@@ -700,6 +700,21 @@ class Molecule:
                 #print ('finalvector',vector,vector/norm)
                 return vector/norm
         return vector
+
+    def get_internal_coordinate(self,indices,unit='degree'):
+        if len(indices) == 2:
+            idx1,idx2 = indices
+            return self.get_distance_between_atoms(idx1,idx2)
+        elif len(indices) == 3:
+            idx1, idx2, idx3 = indices
+            return self.get_angle_between_atoms(idx1,idx2,idx3,unit)
+        elif len(indices) == 4:
+            idx1, idx2, idx3, idx4 = indices
+            return self.get_dihedral_angle_between_atoms(idx1,idx2,idx3,idx4,unit)
+        else:
+            print (f'Wrong coordinate (={indices}) given!')
+            return None
+
 
     def get_distance_between_atoms(self,idx1,idx2):
         """

@@ -10,6 +10,7 @@ import argparse
 import numpy as np
 
 ### ace-reaction libraries ###
+from pyMCD import chem
 from pyMCD.utils import process
 
 '''
@@ -67,22 +68,38 @@ class Calculator:
             multiplicity = (z_sum - chg) % 2 + 1
         return chg,multiplicity
 
+    def write_molecule_info(self,f,molecule,chg,multiplicity):
+        f.write(f'{chg} {multiplicity}\n')
+        for atom in molecule.atom_list:
+            f.write(atom.get_content())
+        f.write('\n')
 
-    def get_energy(self,molecule,chg=None,multiplicity = None):
+    def move_file(self,file_name,save_directory):
+        if file_name is not None and save_directory is not None:
+            os.system(f'mv {file_name}.* {save_directory}/')
+
+
+    def get_energy(self,molecule,chg=None,multiplicity = None),file_name='sp',extra='',save_directory=None:
         '''
         Must return energy with desired unit defined in the Calculator
         '''
         pass
 
 
-    def get_force(self,molecule,chg=None,multiplicity=None):
+    def get_force(self,molecule,chg=None,multiplicity=None,file_name='force',extra='',save_directory=None):
         '''
         Must return force with desired unit defined in the Calculator
         '''
         pass
 
 
-    def relax_geometry(self,molecule,constraints,chg=None,multiplicity=None,num_relaxation=5,maximal_displacement=1000,return_data=False):
+    def relax_geometry(self,molecule,constraints,chg=None,multiplicity=None,file_name='opt',num_relaxation=5,maximal_displacement=1000,extra='',save_directory=None):
+        '''
+        Optimize the geometry under constraints for given relaxation steps.
+        '''
+        pass
+
+    def get_hessian(self,molecule,chg=None,multiplicity=None,file_name='hessian',extra='',save_directory=None):
         '''
         Optimize the geometry under constraints for given relaxation steps.
         '''

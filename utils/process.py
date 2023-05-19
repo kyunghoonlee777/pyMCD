@@ -13,7 +13,7 @@ import random
 from pyMCD import chem
 
 
-def locate_molecule(ace_molecule,coordinate_list,update = False):
+def locate_molecule(ace_molecule,coordinate_list):
     """ Locates atoms according to coordinate_list, be cautious on ordering of atoms
     Args:
         |  ace_molecule (<class 'Molecule'>): class instance of Molecule
@@ -25,8 +25,6 @@ def locate_molecule(ace_molecule,coordinate_list,update = False):
     for i in range(len(atom_list)):
         atom = atom_list[i]
         atom.set_coordinate(coordinate_list[i])
-    if update:
-        ace_molecule.set_adj_matrix(None)
 
 def translate_molecule(ace_molecule,vector):
     atom_list = ace_molecule.atom_list
