@@ -13,7 +13,6 @@ import numpy as np
 
 ### ace-reaction libraries ###
 from pyMCD import chem
-from pyMCD import mcd_original
 from pyMCD import mcd
 from pyMCD.utils import process
 
@@ -231,6 +230,25 @@ def generate_path():
 
     args = parser.parse_args()
 
+    input_directory = args.input_directory
+    output_directory = args.output_directory
+    if output_directory is None:
+        output_directory = input_directory
+    # If problem with input, output directory, automatically exit
+    if not os.path.exists(input_directory):
+        print ('Cannot find the input directory !!!')
+        exit()
+    elif not os.path.exists(output_directory):
+        print ('Given output directory is not found !!!')
+        exit()
+
+    print (f'\ninput directory: {input_directory}')
+    print (f'output directory: {output_directory}\n')
+
+    reactant = read_reactant(input_directory) # Read geometry of reactant
+    constraints, num_steps = read_bond_info(input_directory) # bond info
+    correct = change_option(args) # Read option file and change values in args
+
     use_hessian = args.use_hessian
     reoptimize = args.reoptimize
 
@@ -251,24 +269,6 @@ def generate_path():
     else:
         restart = True
 
-    input_directory = args.input_directory
-    output_directory = args.output_directory
-    if output_directory is None:
-        output_directory = input_directory
-    # If problem with input, output directory, automatically exit
-    if not os.path.exists(input_directory):
-        print ('Cannot find the input directory !!!')
-        exit()
-    elif not os.path.exists(output_directory):
-        print ('Given output directory is not found !!!')
-        exit()
-
-    print (f'\ninput directory: {input_directory}')
-    print (f'output directory: {output_directory}\n')
-
-    reactant = read_reactant(input_directory) # Read geometry of reactant
-    constraints, num_steps = read_bond_info(input_directory) # bond info
-    correct = change_option(args) # Read option file and change values in args
     if not correct:
         exit()
     calculator = get_calculator(args) # Make calculator, you can use your own calculator!
@@ -279,6 +279,9 @@ def generate_path():
         scanner.hessian_update = args.hessian_update
     else:
         scanner = mcd.MCDModified(num_relaxation = args.num_relaxation,calculator=calculator)
+    #print (use_hessian)
+    #exit()
+    
     scanner.step_size = args.step_size
     scanner.log_directory = output_directory
     working_directory = args.working_directory
