@@ -45,7 +45,7 @@ def parse_force(directory): # Read {file_name}.engrad
         lines = f.readlines()
 
     temp = 100000
-    force = []
+    grads = []
     energy = None
     for i, line in enumerate(lines):
         if '# The current total energy' in line:
@@ -55,10 +55,13 @@ def parse_force(directory): # Read {file_name}.engrad
         if i > temp+1:
             if "#" in line:
                 break
-            force.append(float(line.strip()))
+            grads.append(float(line.strip()))
     try:
-        n = len(force)
+        n = len(grads)
     except:
+        return None,None
+
+    if n == 0:
         return None,None
 
     if n%3 != 0:
@@ -66,9 +69,8 @@ def parse_force(directory): # Read {file_name}.engrad
         return None,None
 
     n = int(n/3)
-    force = -np.array(force)
-    force = np.reshape(force,(3,n))
-    force = force.T
+    force = -np.array(grads) # F = -g
+    force = np.reshape(force,(n,3))
     return energy,force
 
 def parse_hessian(directory): # Read {file_name}.hess
@@ -300,6 +302,7 @@ class Orca:
         os.system(f'{self.command} {file_name}.com > {file_name}.log')
         self.move_file(file_name,save_directory)
         energy,force = parse_force(os.path.join(self.working_directory,f'{file_name}.engrad'))
+        bohr_to_angstrom = 0.529177 # Units are Hartree/bohr in chkpoint file
         if force is None:
             if self.error_directory is not None:
                 file_directory = os.path.join(self.error_directory,'orca.err')
@@ -309,7 +312,7 @@ class Orca:
                     f.write(f'Check {os.path.join(self.working_directory,name)} ...\n')
             return None
         os.chdir(current_directory)
-        return force
+        return force/bohr_to_angstrom
 
     def get_hessian(self,molecule,chg=None,multiplicity=None,file_name='hessian',extra='',save_directory=None):
         current_directory = os.getcwd()
@@ -323,6 +326,7 @@ class Orca:
         os.system(f'{self.command} {file_name}.com > {file_name}.log')
         energy,force = parse_force(os.path.join(self.working_directory,f'{file_name}.engrad'))
         hessian = parse_hessian(os.path.join(self.working_directory,f'{file_name}.hess'))
+        bohr_to_angstrom = 0.529177 # Units are Hartree/bohr in chkpoint file
         if force is None:
             if self.error_directory is not None:
                 file_directory = os.path.join(self.error_directory,'orca.err')
@@ -341,7 +345,7 @@ class Orca:
             return None,None
         self.move_file(file_name,save_directory)
         os.chdir(current_directory)
-        return force,hessian
+        return force/bohr_to_angstrom, hessian/bohr_to_angstrom**2
 
 
     def optimize_geometry(self,molecule,constraints={},chg=None,multiplicity=None,file_name='opt',extra='',save_directory=None):

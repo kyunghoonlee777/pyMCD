@@ -223,7 +223,7 @@ def generate_path():
     parser.add_argument('--calculator','-c',type=str,help='Name of Quantum Calculation software',default='gaussian')
     parser.add_argument('--unit','-u',type=str,help='unit',default='Hartree')
     parser.add_argument('--command',type=str,help='command for running qc package',default='g09')
-    parser.add_argument('--use_hessian',type=int,default=1)
+    parser.add_argument('--use_hessian',type=int,default=0)
     parser.add_argument('--restart',type=int,default=0)
     parser.add_argument('--hessian_update',type=str,default='bofill')
     parser.add_argument('--reoptimize',type=int,default=1)
@@ -274,14 +274,9 @@ def generate_path():
     calculator = get_calculator(args) # Make calculator, you can use your own calculator!
     if calculator is None:
         exit()
-    if use_hessian:
-        scanner = mcd.MCD(num_relaxation = args.num_relaxation,calculator=calculator)
-        scanner.hessian_update = args.hessian_update
-    else:
-        scanner = mcd.MCDModified(num_relaxation = args.num_relaxation,calculator=calculator)
-    #print (use_hessian)
-    #exit()
-    
+    scanner = mcd.MCD(num_relaxation = args.num_relaxation,calculator=calculator)
+    scanner.use_hessian = use_hessian
+    scanner.hessian_update = args.hessian_update
     scanner.step_size = args.step_size
     scanner.log_directory = output_directory
     working_directory = args.working_directory
@@ -307,10 +302,7 @@ def generate_path():
     print ('================= PYMCD RUNNING !!! ===================')
     print ('=======================================================\n')
 
-    if use_hessian:
-        pathway = scanner.scan(reactant,constraints,num_scan=num_scan,chg = reactant.chg, multiplicity = reactant.multiplicity)
-    else:
-        pathway = scanner.scan(reactant,constraints,num_steps,chg = reactant.chg, multiplicity = reactant.multiplicity)
+    pathway = scanner.scan(reactant,constraints,num_steps,chg = reactant.chg, multiplicity = reactant.multiplicity)
     return pathway
 
 if __name__ == '__main__':
