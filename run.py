@@ -200,7 +200,7 @@ def get_calculator(args):
         calculator = gaussian.Gaussian(args.command)
     elif calculator_name == 'orca':
         from pyMCD.Calculator import orca
-        calculator = orca.Orca()
+        calculator = orca.Orca(args.command)
     else:
         print (f'Wrong calculator (={calculator_name}) is given! Check the option file !!!')
         calculator = None
