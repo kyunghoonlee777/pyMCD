@@ -6,6 +6,7 @@
 
 - python>=3.7
 - [numpy](https://github.com/numpy/numpy)
+- [scipy]>=1.11.0
 - [cclib](https://github.com/cclib/cclib)>=1.7.1 (If users want to use Gaussian …)
 - [matplotlib](https://github.com/matplotlib/matplotlib) (If users want to obtain the figure of a profile)
 
@@ -98,12 +99,15 @@ Information containing theory level of calculations, basis set, solvation, and o
 We feed hyperparameters of pyMCD as the following format:
 
 ```python
-max_step=7 # The maximum number of optimization steps, default=5
+num_relaxation=7 # The maximum number of optimization steps, default=5
 step_size=0.05 # The maximal displacement within an optimization step, default is set with optimized value
 unit=Hartree # The energy unit for printing a log file. Available units are kcal, eV, Hartree. Default is Hartree
 working_directory=<scratch directory> # A scratch directory for running QC package, default is the input directory
-calculator: Gaussian # The name of QC package. Currently, Gaussian and Orac are available
-command: g09 # The command for running QC package. (Same command you configured in 2. Settings)
+calculator= Gaussian # The name of QC package. Currently, Gaussian and Orac are available
+command=g09 # The command for running QC package. (Same command you configured in 2. Settings)
+use_hessian=0 # Whether to use the original version or the revised version of MCD
+hessian_update=exact # Method for calculating the Hessian
+reoptimize=1 # Whether to first optimize the given reactant geometry before running the MCD algorithm
 ```
 
 This file is not necessary. If this file is not found, the code will automatically run with setting variables as default values.

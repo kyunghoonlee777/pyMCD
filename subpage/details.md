@@ -6,7 +6,7 @@ The main advantage of pyMCD is that it can be easily interfaced with any QC pack
 
 Basically, you need to add your own module in the ‘Calculator’ folder for interfacing with a new QC package. In the folder, you will already see three scripts: gaussian.py, orca.py, and template.py. 
 
-In the template.py, you can see that there are three functions that require implementation: **get_energy**, **get_force**, and **relax_geometry**: Each function is used for obtaining the energy, the gradient, and the optimized geometry of a given molecular structure. To do so, of course, **three things** should be well implemented: the code should **create the input file** for running a QC package, **run the QC package** with the input file, and **extract the desired result** from the output file. 
+In the template.py, you can see that there are three functions that require implementation: **get_energy**, **get_force**, and **relax_geometry** (also, **get_hessian**, if users want to use the original one!): Each function is used for obtaining the energy, the gradient, and the optimized geometry of a given molecular structure. To do so, of course, **three things** should be well implemented: the code should **create the input file** for running a QC package, **run the QC package** with the input file, and **extract the desired result** from the output file. 
 
 Here, we will explain how we implemented gaussian.py, which can perform those three things. Basically, the three functions are almost the same. They just need to slightly change the input creation and read different information depending on their purpose. Therefore, we’ll simply explain the **get_energy** function.
 
