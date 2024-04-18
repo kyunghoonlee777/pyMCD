@@ -6,7 +6,7 @@
 
 - python>=3.7
 - [numpy](https://github.com/numpy/numpy)
-- [scipy]>=1.11.0
+- [scipy](https://github.com/scipy/scipy)>=1.11.0
 - [cclib](https://github.com/cclib/cclib)>=1.7.1 (If users want to use Gaussian …)
 - [matplotlib](https://github.com/matplotlib/matplotlib) (If users want to obtain the figure of a profile)
 
@@ -310,7 +310,8 @@ View the following page: [Implementation instruction](subpage/details.md)
 
 ## Citation
 
-Please cite as below:
+Please cite as below
+Lee, Kyunghoon, Jun Hyeong Kim, and Woo Youn Kim. "pyMCD: Python package for searching transition states via the multicoordinate driven method." Computer Physics Communications 291 (2023): 108831.
 
 ## License
 
