@@ -316,3 +316,8 @@ Lee, Kyunghoon, Jun Hyeong Kim, and Woo Youn Kim. "pyMCD: Python package for sea
 ## License
 
 The code is under BSD-3-license
+
+## Contact Information
+
+Please e-mail me to here: kyunghoonlee@kaist.ac.kr
+
