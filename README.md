@@ -127,7 +127,7 @@ Output files will be saved in the `output directory`. Default option is same wit
 ```
 python run.py \
     -id example/diels \
-    -sd example/diels
+    -od example/diels
 ```
 
 ## Output
