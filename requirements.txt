@@ -1,0 +1,4 @@
+numpy
+scipy>=1.11.0
+cclib>=1.7.1
+matplotlib
